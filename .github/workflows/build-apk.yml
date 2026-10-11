@@ -1,0 +1,48 @@
+name: Build Sambal Master Indonesia APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-apk.yml'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Ambil source code
+        uses: actions/checkout@v4
+
+      - name: Siapkan Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Siapkan Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Siapkan Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Pasang Android SDK
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Ekstrak proyek game
+        run: |
+          unzip -q SambalMaster_Android_Build_On_Phone.zip -d source
+          echo "PROJECT_DIR=$GITHUB_WORKSPACE/source/SambalMaster_BuildPhone/SambalMasterAndroid" >> $GITHUB_ENV
+
+      - name: Bangun APK
+        run: |
+          cd "$PROJECT_DIR"
+          gradle assembleDebug
+
+      - name: Simpan APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Sambal-Master-Indonesia-APK
+          path: source/SambalMaster_BuildPhone/SambalMasterAndroid/app/build/outputs/apk/debug/app-debug.apk
